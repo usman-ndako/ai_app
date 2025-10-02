@@ -15,7 +15,7 @@ export default function Home() {
         </h1>
         <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto px-4">
           Transform lengthy documents into concise, context-aware summaries. 
-          Choose from 5 professional summary types tailored to your needs.
+          Choose from 5 professional summary types tailored to your specific needs.
         </p>
           <div className="flex items-center justify-center gap-4 mt-6 flex-wrap">
             <ApiHealthIndicator />
