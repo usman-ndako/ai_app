@@ -1,111 +1,54 @@
-// import { SummaryRequest, SummaryResponse, ApiError } from './types';
+import { SummaryRequest, SummaryResponse, ContentAnalysis, SummaryTypes } from '@/types';
 
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// export class ApiClient {
-//   private baseUrl: string;
+export const apiService = {
+  async summarize(text: string, summaryType: SummaryRequest['summary_type']): Promise<SummaryResponse> {
+    const response = await fetch(`${API_BASE_URL}/summarize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        summary_type: summaryType,
+      } as SummaryRequest),
+    });
 
-//   constructor(baseUrl: string = API_BASE_URL) {
-//     this.baseUrl = baseUrl;
-//   }
-
-//   async summarize(request: SummaryRequest): Promise<SummaryResponse> {
-//     try {
-//       const response = await fetch(`${this.baseUrl}/summarize`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(request),
-//       });
-
-//       if (!response.ok) {
-//         const error: ApiError = await response.json();
-//         throw new Error(error.detail || 'Failed to generate summary');
-//       }
-
-//       const data: SummaryResponse = await response.json();
-//       return data;
-//     } catch (error) {
-//       if (error instanceof Error) {
-//         throw error;
-//       }
-//       throw new Error('An unexpected error occurred');
-//     }
-//   }
-
-//   async healthCheck(): Promise<boolean> {
-//     try {
-//       const response = await fetch(`${this.baseUrl}/`);
-//       return response.ok;
-//     } catch {
-//       return false;
-//     }
-//   }
-// }
-
-// // Export singleton instance
-// export const apiClient = new ApiClient();
-
-import { SummaryRequest, SummaryResponse, ApiError } from './types';
-
-export class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl?: string) {
-    // Use provided baseUrl or get from environment variable
-    this.baseUrl = baseUrl || this.getApiBaseUrl();
-  }
-
-  private getApiBaseUrl(): string {
-    // This will only run on the client side
-    if (typeof window !== 'undefined') {
-      // Client-side: use environment variable
-      return process.env.NEXT_PUBLIC_API_URL || 'https://ai-app-1-3p2s.onrender.com';
-    } else {
-      // Server-side: use the production URL directly
-      return 'https://ai-app-1-3p2s.onrender.com';
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to generate summary');
     }
-  }
 
-  async summarize(request: SummaryRequest): Promise<SummaryResponse> {
-    try {
-      const response = await fetch(`${this.baseUrl}/summarize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+    return response.json();
+  },
 
-      if (!response.ok) {
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || 'Failed to generate summary');
-      }
+  async analyzeContent(text: string): Promise<ContentAnalysis> {
+    const response = await fetch(`${API_BASE_URL}/analyze-content`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
 
-      const data: SummaryResponse = await response.json();
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('An unexpected error occurred');
+    if (!response.ok) {
+      throw new Error('Failed to analyze content');
     }
-  }
+
+    return response.json();
+  },
+
+  async getSummaryTypes(): Promise<SummaryTypes> {
+    const response = await fetch(`${API_BASE_URL}/summary-types`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch summary types');
+    }
+    return response.json();
+  },
 
   async healthCheck(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.baseUrl}/`);
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
-
-  getApiUrl(): string {
-    return this.baseUrl;
-  }
-}
-
-// Export singleton instance
-export const apiClient = new ApiClient();
+    const response = await fetch(`${API_BASE_URL}/health`);
+    return response.ok;
+  },
+};
