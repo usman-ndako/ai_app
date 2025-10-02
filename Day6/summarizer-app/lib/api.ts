@@ -49,25 +49,23 @@
 
 import { SummaryRequest, SummaryResponse, ApiError } from './types';
 
-// Use only the environment variable - no fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Validate that the environment variable is set and provide TypeScript assurance
-if (!API_BASE_URL) {
-  throw new Error(
-    'NEXT_PUBLIC_API_URL environment variable is not set. ' +
-    'Please set it in .env.local for development and in your hosting platform for production.'
-  );
-}
-
-// Type assertion since we've validated it above
-const validatedApiBaseUrl = API_BASE_URL as string;
-
 export class ApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = validatedApiBaseUrl) {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    // Use provided baseUrl or get from environment variable
+    this.baseUrl = baseUrl || this.getApiBaseUrl();
+  }
+
+  private getApiBaseUrl(): string {
+    // This will only run on the client side
+    if (typeof window !== 'undefined') {
+      // Client-side: use environment variable
+      return process.env.NEXT_PUBLIC_API_URL || 'https://ai-app-1-3p2s.onrender.com';
+    } else {
+      // Server-side: use the production URL directly
+      return 'https://ai-app-1-3p2s.onrender.com';
+    }
   }
 
   async summarize(request: SummaryRequest): Promise<SummaryResponse> {
@@ -104,7 +102,6 @@ export class ApiClient {
     }
   }
 
-  // Optional: Add method to get the current API URL for debugging
   getApiUrl(): string {
     return this.baseUrl;
   }
