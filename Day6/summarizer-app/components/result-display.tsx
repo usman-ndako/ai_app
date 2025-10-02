@@ -26,7 +26,7 @@ export default function ResultDisplay({ result, originalText }: ResultDisplayPro
       setCopied(true);
       toast.success('Summary copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard');
     }
   };

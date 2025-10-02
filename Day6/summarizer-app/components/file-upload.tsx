@@ -37,7 +37,13 @@ export default function FileUpload({ onFileRead }: FileUploadProps) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item) => {
+          // Check if the item has a 'str' property and it's a string
+          if (typeof item === 'object' && item !== null && 'str' in item && typeof item.str === 'string') {
+            return item.str;
+          }
+          return '';
+        })
         .join(' ');
       fullText += pageText + '\n';
     }

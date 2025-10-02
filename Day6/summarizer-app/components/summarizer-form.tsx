@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,22 +22,6 @@ export default function SummarizerForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<SummaryResponse | null>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
-
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-
-// Check API health on mount
-useEffect(() => {
-  const checkHealth = async () => {
-    const isOnline = await apiClient.healthCheck();
-    setApiOnline(isOnline);
-  };
-  
-  checkHealth();
-  
-  // Recheck every 30 seconds
-  const interval = setInterval(checkHealth, 30000);
-  return () => clearInterval(interval);
-}, []);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;

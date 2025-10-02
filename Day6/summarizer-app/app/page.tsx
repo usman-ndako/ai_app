@@ -1,11 +1,11 @@
-import { Toaster } from 'sonner';
 import SummarizerForm from '@/components/summarizer-form';
 import ApiHealthIndicator from '@/components/api-health-indicator';
+import { ToasterProvider } from '@/components/toaster-provider';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-      <Toaster position="top-right" richColors />
+      <ToasterProvider />
       
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-12">
