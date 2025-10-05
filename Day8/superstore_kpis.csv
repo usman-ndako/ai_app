@@ -1,0 +1,13 @@
+Segment,Region,Total Sales,Avg Sales,Order Count,Total Profit,Avg Profit
+Consumer,Central,252031.43,207.95,1212,8564.05,7.07
+Consumer,East,350908.17,238.88,1469,41190.98,28.04
+Consumer,South,195580.97,233.39,838,26913.57,32.12
+Consumer,West,362880.77,217.03,1672,57450.6,34.36
+Corporate,Central,157995.81,234.76,673,18703.9,27.79
+Corporate,East,200409.35,228.52,877,23622.58,26.94
+Corporate,South,121885.93,238.99,510,15215.22,29.83
+Corporate,West,225855.27,235.27,960,34437.43,35.87
+Home Office,Central,91212.64,208.25,438,12438.41,28.4
+Home Office,East,127463.73,253.91,502,26709.22,53.21
+Home Office,South,74255.0,273.0,272,4620.63,16.99
+Home Office,West,136721.78,239.44,571,16530.42,28.95
