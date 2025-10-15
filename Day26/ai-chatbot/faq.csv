@@ -1,0 +1,91 @@
+question,answer
+How can I reset my password?,Click on 'Forgot Password' at the login page and follow the instructions.
+How do I cancel my subscription?,Go to 'Account Settings' and select 'Cancel Subscription'.
+Do you offer refunds?,"Yes, we offer refunds within 30 days of purchase."
+How can I contact support?,You can reach us anytime at support@yourcompany.com
+What payment methods do you accept?,"We accept major credit cards, debit cards, and select payment providers like Stripe and PayPal."
+How long does it take to process refunds?,Refunds are processed within 5-10 business days depending on your bank.
+Can I change my plan later?,Yes — you can upgrade or downgrade your plan anytime from Billing > Change Plan.
+How do I update my billing information?,Go to Account Settings > Billing and update your payment method.
+Is there a free trial available?,We offer a 14-day free trial with full access to core features.
+Do you provide invoices?,Yes — invoices are emailed after each payment and available in Billing > Invoices.
+How secure is my data?,We use industry-standard encryption (TLS) and follow best practices for data security.
+How do I enable two-factor authentication (2FA)?,Enable 2FA in Account Settings > Security and follow the setup steps.
+What is your uptime guarantee?,We provide a 99.9% uptime SLA on paid plans.
+How can I export my data?,Use Account Settings > Export Data to download your data in CSV format.
+How do I add team members?,Go to Workspace/Team Settings > Members and invite new users by email.
+Can I transfer my subscription to another account?,Contact support and we’ll assist with transferring subscription ownership.
+Do you offer discounts for nonprofits or education?,Yes — eligible nonprofits and educational institutions can apply for discounts.
+How do I integrate with Slack?,Visit Integrations > Slack and follow the prompts to authorize the connection.
+What are webhooks and how do I use them?,Webhooks send real-time event notifications to your endpoint; configure them in Developer > Webhooks.
+How can I test the API?,Use Test Mode and the provided test API keys in Developer > API keys.
+Where can I find API documentation?,Our full API docs are under Developer > API Documentation.
+What is your refund policy for annual subscriptions?,Annual plans may receive a prorated refund within 30 days; contact support for details.
+How do I set up shipping rates?,"Go to Store Settings > Shipping to configure carriers, rates, and zones."
+Can I sell internationally?,Yes — enable multiple currencies and configure taxes/shipping for target regions.
+How do I add a product to my store?,"From the dashboard, go to Products > Add product and fill in the details."
+What do I do if I forget my username?,Use 'Forgot Password' and contact support if you cannot recover your account.
+How do I connect a payment gateway?,Navigate to Payments > Connect and choose your preferred gateway to link it.
+What is PCI compliance?,PCI compliance ensures secure card data handling; we are PCI SAQ-A compliant for card processing.
+How are payouts scheduled?,"Payout schedules vary by provider — typically daily, weekly, or monthly; check Payments > Payouts."
+How do I change my email address on file?,Update your email in Account Settings > Profile and verify the new address.
+Why was my card declined?,"Card declines can be due to insufficient funds, expired card, or card issuer restrictions; try a different card."
+Do you offer phone support?,Phone support is available on select paid plans; check Support > Contact Options.
+How do I set up tax rates?,Configure tax settings in Store Settings > Taxes or enable automated tax calculation.
+What is a chargeback and how do I handle it?,A chargeback is a disputed transaction; follow the steps in Billing > Disputes to respond.
+Can I schedule reports?,Yes — go to Analytics > Reports and schedule automated email delivery.
+Is there a developer sandbox?,Yes — Test Mode acts as a sandbox for safe testing without live charges.
+How do I add coupon codes?,Create and manage discounts in Marketing > Discounts.
+What browsers are supported?,"We support the latest versions of Chrome, Edge, Safari, and Firefox."
+How do I enable single sign-on (SSO)?,SSO is available on enterprise plans; contact Sales to enable and configure SSO.
+Can I restrict access to certain team members?,Yes — create roles and permissions under Team Settings > Roles.
+Are API keys public?,Never expose secret API keys in client-side code; use restricted publishable keys where appropriate.
+How do I close my account?,Go to Account Settings > Close account or contact support to help guide you.
+What happens to my data after I cancel?,"After cancellation, we archive data for 30 days; permanent deletion can be requested."
+How do I troubleshoot login issues?,"Try clearing your cache, resetting your password, or using an incognito window; contact support if needed."
+Do you support multiple stores/workspaces under one account?,Yes — you can add multiple stores or workspaces from the main dashboard.
+How do I claim a domain?,"Under Store > Domains, you can connect an existing domain or buy a new one."
+Can I set up automated emails?,"Yes — use Marketing > Automations to create welcome, cart recovery, and transactional emails."
+How does billing proration work?,"When changing plans mid-cycle, charges are prorated based on remaining days in the billing period."
+What is two-step verification?,Two-step verification adds an extra security layer using an authenticator app or SMS.
+How do I update my app integrations?,Visit Integrations > Installed Apps to update or remove connected apps.
+How can I view activity logs?,Account > Activity Log records important account events and admin actions.
+What is the API rate limit?,Rate limits depend on endpoints; check Developer > Rate Limits for current values.
+How do I file a bug report?,Create a ticket at support@yourcompany.com with steps to reproduce and any logs or screenshots.
+Do you provide migration assistance?,Yes — we offer migration services and guides; contact Sales for custom help.
+How do I change my plan billing cycle?,Change to monthly or annual billing under Billing > Change billing cycle.
+How do I add images to a product?,Open the product editor and drag-and-drop images or upload from your computer.
+What are subscription add-ons?,Add-ons are optional features billed in addition to a base plan; manage them in Billing.
+How do I connect Google Analytics?,Follow Integrations > Google Analytics and add your tracking ID to enable analytics.
+Where can I see my transaction history?,Billing > Transactions shows detailed payment and refund history.
+Do you support gift cards?,Yes — enable gift cards in Store Features > Gift Cards and customize their settings.
+How do I localize my storefront?,Use Themes > Language to add translations and localize content for customers.
+Can I schedule product visibility?,Yes — set publish dates on products to control when they go live.
+How do I recover deleted items?,Deleted items are recoverable from the Trash for 30 days; restore from Store > Trash.
+What customer support hours do you have?,Support hours and response SLA are listed on Support > Hours; premium plans have extended coverage.
+How do I set minimum order quantities?,Configure quantity rules in Products > Inventory > Quantity controls.
+Can I connect third-party shipping carriers?,Yes — connect carriers under Shipping > Carriers and enable live rates.
+How do I verify my account for higher processing limits?,Complete identity verification in Account > Verification to increase limits.
+What is test mode vs live mode?,Test mode simulates transactions without real money; live mode processes actual payments.
+How do I enable email notifications for orders?,Go to Settings > Notifications and enable the order-related emails you'd like to receive.
+Can I whitelist IP addresses for API access?,Yes — add allowed IPs in Developer > API Security to restrict access.
+How do I create a staging environment?,Duplicate your store to a staging workspace or use a separate sandbox account for testing.
+What happens during scheduled maintenance?,We notify administrators in advance and provide status updates until the maintenance completes.
+How do I handle returns and refunds?,Process returns from Orders > Returns and issue refunds from the order details page.
+Can I automate tax calculations?,Enable automated tax in Taxes > Automatic taxes using our tax provider integrations.
+How do I change the language of the admin panel?,Select your preferred language under Account Settings > Preferences.
+Do you store credit card information?,We tokenize card data via our payment processor and do not store full card numbers on our servers.
+How do I set up recurring billing?,Create a subscription product and configure billing intervals in Products > Subscriptions.
+Can I import products in bulk?,Yes — use the import tool in Products > Import and upload a CSV file.
+How do I set inventory alerts?,Enable low-stock notifications in Inventory > Alerts to receive warnings before stockouts.
+What should I do if my site is hacked?,"Immediately contact support, change all admin passwords, and follow our security incident guide."
+How can I remove a user's access?,"From Team > Members, revoke their access or change their role to limit permissions."
+How do I add custom CSS to my theme?,Use Themes > Edit code to add custom CSS; create backups before editing.
+Can I offer installment payments?,Yes — enable buy-now-pay-later options through supported payment providers.
+How are taxes displayed to customers?,Taxes are shown at checkout based on customer location and tax configuration.
+How do I handle failed payments?,Failed payments trigger email alerts; update payment methods or retry charges from Billing.
+Does the product support multilingual SEO?,Yes — apply translated metadata and hreflang tags in the theme settings.
+How do I schedule backups?,Backups are handled automatically; download manual exports from Account > Exports.
+What file types are supported for uploads?,"We support common image formats (JPEG, PNG, GIF) and documents (PDF)."
+How do I request a feature?,Submit feature requests through Feedback > Request a Feature; our product team reviews them.
+
