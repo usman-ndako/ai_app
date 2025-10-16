@@ -1,302 +1,3 @@
-# import os
-# import numpy as np
-# import pandas as pd
-# import requests
-# from fastapi import FastAPI, HTTPException, Request, UploadFile, File
-# from pydantic import BaseModel
-# from fastapi.middleware.cors import CORSMiddleware
-# from dotenv import load_dotenv
-# from sentence_transformers import SentenceTransformer
-# from typing import Dict, List
-# from datetime import datetime, timedelta
-# import io
-
-# # ---------- LOAD ENV ----------
-# load_dotenv()
-# OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-
-# if not OPENROUTER_API_KEY:
-#     raise ValueError("❌ Missing OPENROUTER_API_KEY in environment variables")
-
-# # ---------- INIT FASTAPI ----------
-# app = FastAPI(title="AI Chatbot API with Memory", version="4.0")
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # ---------- LOAD LOCAL EMBEDDING MODEL ----------
-# print("🔄 Loading local embedding model...")
-# embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-# print("✅ Local embedding model loaded successfully!")
-
-# # ---------- LOAD FAQ ----------
-# faq_path = os.path.join(os.path.dirname(__file__), "faq.csv")
-# if not os.path.exists(faq_path):
-#     raise FileNotFoundError(f"❌ faq.csv not found at {faq_path}")
-
-# faq_df = pd.read_csv(faq_path)
-# faq_df["embedding"] = faq_df["question"].apply(lambda x: embedding_model.encode(str(x), convert_to_numpy=True))
-# print(f"✅ Loaded {len(faq_df)} FAQ entries with embeddings.")
-
-# # ---------- RELOAD FAQ HELPER ----------
-# def reload_faq():
-#     """Reload FAQ from CSV and recompute embeddings."""
-#     global faq_df
-#     faq_df = pd.read_csv(faq_path)
-#     faq_df["embedding"] = faq_df["question"].apply(lambda x: embedding_model.encode(str(x), convert_to_numpy=True))
-#     print(f"✅ Reloaded {len(faq_df)} FAQ entries with embeddings.")
-
-# # ---------- SESSION MEMORY ----------
-# conversation_memory: Dict[str, List[Dict]] = {}
-# MEMORY_EXPIRY_MINUTES = 30
-# MAX_MEMORY_MESSAGES = 10
-
-# def clean_expired_sessions():
-#     now = datetime.utcnow()
-#     expired_sessions = [
-#         sid for sid, msgs in conversation_memory.items()
-#         if (now - msgs[-1]["timestamp"]) > timedelta(minutes=MEMORY_EXPIRY_MINUTES)
-#     ]
-#     for sid in expired_sessions:
-#         del conversation_memory[sid]
-#         print(f"[Memory Cleanup] Expired session removed: {sid}")
-
-# # ---------- EMBEDDING HELPER ----------
-# def embed_text(text: str):
-#     try:
-#         return embedding_model.encode(text, convert_to_numpy=True)
-#     except Exception as e:
-#         print(f"[Embedding Error] {e}")
-#         return np.zeros(384)
-
-# # ---------- FIND FAQ MATCH ----------
-# def find_best_match(user_query: str):
-#     query_emb = embed_text(user_query)
-#     similarities = faq_df["embedding"].apply(
-#         lambda emb: np.dot(emb, query_emb)
-#         / (np.linalg.norm(emb) * np.linalg.norm(query_emb) + 1e-10)
-#     )
-#     best_idx = similarities.idxmax()
-#     best_score = similarities.max()
-
-#     if best_score > 0.55:
-#         return faq_df.iloc[best_idx]["answer"]
-#     return None
-
-# # ---------- AI COMPLETION ----------
-# def generate_ai_response(prompt: str, memory: List[Dict], faq_context: str = None):
-#     """Generate conversational AI response with optional memory and FAQ context."""
-#     system_message = {
-#         "role": "system",
-#         "content": (
-#             "You are a Chatbot designed to assist users with their inquiries. "
-#             "You are a warm, empathetic, and conversational support assistant. "
-#             "You remember previous parts of the conversation and maintain context naturally. "
-#             "Be concise but engaging, and stay consistent with prior responses."
-#         ),
-#     }
-
-#     messages = [system_message]
-
-#     # Add short-term memory (last 10 messages)
-#     for item in memory[-MAX_MEMORY_MESSAGES:]:
-#         messages.append({"role": "user" if item["sender"] == "user" else "assistant", "content": item["message"]})
-
-#     # Add new prompt
-#     if faq_context:
-#         messages.append({
-#             "role": "user",
-#             "content": f"User question: {prompt}\n\nRelevant FAQ info: {faq_context}",
-#         })
-#     else:
-#         messages.append({"role": "user", "content": prompt})
-
-#     try:
-#         response = requests.post(
-#             "https://openrouter.ai/api/v1/chat/completions",
-#             headers={
-#                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-#                 "HTTP-Referer": "http://localhost:3000",
-#                 "X-Title": "AI Chatbot with Memory",
-#                 "Content-Type": "application/json",
-#             },
-#             json={
-#                 "model": "openai/gpt-4o-mini",
-#                 "messages": messages,
-#             },
-#             timeout=40,
-#         )
-
-#         if response.status_code != 200:
-#             print(f"[AI Error] {response.status_code}: {response.text[:200]}")
-#             return "I'm sorry, there was an issue connecting to my AI engine."
-
-#         data = response.json()
-#         return data["choices"][0]["message"]["content"]
-
-#     except Exception as e:
-#         print(f"[AI Exception] {type(e).__name__}: {e}")
-#         return "I'm sorry, something went wrong. Please try again later."
-
-# # ---------- REQUEST SCHEMA ----------
-# class ChatRequest(BaseModel):
-#     session_id: str
-#     message: str
-
-# class AddFAQRequest(BaseModel):
-#     question: str
-#     answer: str
-
-# # ---------- HELPER TO CHECK FOR DUPLICATES ----------
-# def get_unique_faqs(existing_df: pd.DataFrame, new_entries: pd.DataFrame) -> pd.DataFrame:
-#     """Filter new entries to exclude duplicates based on exact question + answer match."""
-#     if new_entries.empty:
-#         return new_entries
-    
-#     # Create a combined key for exact matching (question + answer)
-#     existing_df['key'] = existing_df['question'].astype(str) + '|||' + existing_df['answer'].astype(str)
-#     new_entries['key'] = new_entries['question'].astype(str) + '|||' + new_entries['answer'].astype(str)
-    
-#     # Find duplicates
-#     duplicates_mask = new_entries['key'].isin(existing_df['key'])
-    
-#     # Return only non-duplicates
-#     unique_new = new_entries[~duplicates_mask].drop(columns=['key'])
-#     return unique_new
-
-# # ---------- ADD FAQ ROUTE ----------
-# @app.post("/add_faq")
-# def add_faq(req: AddFAQRequest):
-#     if not req.question.strip() or not req.answer.strip():
-#         raise HTTPException(status_code=400, detail="Question and answer cannot be empty.")
-
-#     # Check for duplicate
-#     new_entry_df = pd.DataFrame([{"question": req.question, "answer": req.answer}])
-#     unique_entry = get_unique_faqs(faq_df, new_entry_df)
-    
-#     if unique_entry.empty:
-#         return {
-#             "success": False,
-#             "message": f"FAQ already exists: '{req.question}'",
-#             "total_faqs": len(faq_df)
-#         }
-
-#     # Append to CSV
-#     unique_entry.to_csv(faq_path, mode='a', header=False, index=False)
-
-#     # Reload FAQ with new embedding
-#     reload_faq()
-
-#     return {
-#         "success": True,
-#         "message": f"FAQ added successfully! New entry: '{req.question}'",
-#         "total_faqs": len(faq_df)
-#     }
-
-# # ---------- UPLOAD CSV FAQ ROUTE ----------
-# @app.post("/upload_faq_csv")
-# def upload_faq_csv(file: UploadFile = File(...)):
-#     if not file.filename.endswith('.csv'):
-#         raise HTTPException(status_code=400, detail="Only CSV files are allowed.")
-
-#     try:
-#         # Read uploaded CSV into DataFrame
-#         content = file.file.read()
-#         df_new = pd.read_csv(io.BytesIO(content))
-
-#         if 'question' not in df_new.columns or 'answer' not in df_new.columns:
-#             raise HTTPException(status_code=400, detail="CSV must have 'question' and 'answer' columns.")
-
-#         if df_new.empty:
-#             raise HTTPException(status_code=400, detail="CSV is empty.")
-
-#         # Filter for unique entries only
-#         df_unique = get_unique_faqs(faq_df, df_new[['question', 'answer']])
-
-#         if df_unique.empty:
-#             raise HTTPException(status_code=400, detail="All FAQs in CSV already exist. No new entries added.")
-
-#         # Append unique new rows to existing CSV
-#         df_unique.to_csv(faq_path, mode='a', header=False, index=False)
-
-#         # Reload FAQ with new embeddings
-#         reload_faq()
-
-#         return {
-#             "success": True,
-#             "message": f"Successfully added {len(df_unique)} unique FAQs from CSV (skipped {len(df_new) - len(df_unique)} duplicates)!",
-#             "total_faqs": len(faq_df)
-#         }
-
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing CSV: {str(e)}")
-
-# # ---------- GET FAQ ROUTE ----------
-# @app.get("/get_faqs")
-# @app.get("/faq")
-# def get_faqs():
-#     # Select only serializable columns and convert to list of dicts
-#     faqs_list = faq_df[["question", "answer"]].to_dict(orient="records")
-#     return {
-#         "faqs": faqs_list,
-#         "total": len(faqs_list)
-#     }
-
-# # ---------- MAIN CHAT ROUTE (REVERTED: Synchronous non-streaming) ----------
-# @app.post("/chat")
-# def chat(req: ChatRequest):
-#     user_message = req.message.strip()
-#     if not user_message:
-#         raise HTTPException(status_code=400, detail="Empty message.")
-
-#     clean_expired_sessions()
-
-#     # Initialize session memory if new
-#     if req.session_id not in conversation_memory:
-#         conversation_memory[req.session_id] = []
-#         print(f"[New Session] {req.session_id}")
-
-#     # Retrieve conversation memory
-#     memory = conversation_memory[req.session_id]
-
-#     # Try FAQ match
-#     faq_answer = find_best_match(user_message)
-#     ai_reply = generate_ai_response(user_message, memory, faq_context=faq_answer)
-
-#     # Store new messages in memory
-#     memory.append({"sender": "user", "message": user_message, "timestamp": datetime.utcnow()})
-#     memory.append({"sender": "assistant", "message": ai_reply, "timestamp": datetime.utcnow()})
-
-#     # Trim memory
-#     if len(memory) > 2 * MAX_MEMORY_MESSAGES:
-#         conversation_memory[req.session_id] = memory[-2 * MAX_MEMORY_MESSAGES :]
-
-#     return {
-#         "reply": ai_reply,
-#         "source": "faq_enhanced" if faq_answer else "ai_original",
-#         "memory_length": len(conversation_memory[req.session_id]),
-#     }
-
-# # ---------- ROUTES ----------
-# @app.get("/")
-# def root():
-#     return {
-#         "message": "✅ AI Chatbot API with Memory is running",
-#         "sessions": len(conversation_memory),
-#         "faq_count": len(faq_df),
-#     }
-
-# @app.get("/health")
-# def health():
-#     return {"status": "healthy", "active_sessions": len(conversation_memory)}
-
 import os
 import numpy as np
 import requests
@@ -306,25 +7,118 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Dict, List
 from datetime import datetime, timedelta
-import io
 import csv
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
+from collections import defaultdict
+import time
 
 #---------- LOAD ENV ----------
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 JINA_API_KEY = os.getenv("JINA_API_KEY")
+MONGODB_URI = os.getenv("MONGODB_URI")
 
 if not OPENROUTER_API_KEY:
     raise ValueError("❌ Missing OPENROUTER_API_KEY in environment variables")
 if not JINA_API_KEY:
     raise ValueError("❌ Missing JINA_API_KEY in environment variables")
+if not MONGODB_URI:
+    raise ValueError("❌ Missing MONGODB_URI in environment variables")
+
+#---------- MONGODB CONNECTION ----------
+try:
+    mongo_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+    mongo_client.admin.command('ping')
+    print("✅ Connected to MongoDB Atlas!")
+    
+    db = mongo_client["chatbot_db"]
+    faq_collection = db["faqs"]
+    
+    # Create index on question for faster lookups
+    faq_collection.create_index("question")
+    print("✅ MongoDB indexes created")
+    
+except PyMongoError as e:
+    print(f"❌ MongoDB connection error: {e}")
+    raise ValueError("❌ Failed to connect to MongoDB Atlas")
+
+#---------- RATE LIMITING ----------
+class RateLimiter:
+    """In-memory rate limiter for free tier without external dependencies"""
+    def __init__(self):
+        self.requests = defaultdict(list)  # session_id -> list of timestamps
+        
+    def is_allowed(self, session_id: str, max_requests: int = 20, window_seconds: int = 3600) -> tuple[bool, int]:
+        """
+        Check if request is allowed.
+        Returns: (is_allowed: bool, remaining_requests: int)
+        """
+        now = time.time()
+        window_start = now - window_seconds
+        
+        # Clean old requests outside window
+        self.requests[session_id] = [
+            req_time for req_time in self.requests[session_id] 
+            if req_time > window_start
+        ]
+        
+        current_count = len(self.requests[session_id])
+        
+        if current_count >= max_requests:
+            return False, 0
+        
+        # Add current request
+        self.requests[session_id].append(now)
+        remaining = max_requests - current_count - 1
+        
+        return True, remaining
+    
+    def get_reset_time(self, session_id: str, window_seconds: int = 3600) -> int:
+        """Get Unix timestamp when rate limit resets"""
+        if not self.requests[session_id]:
+            return int(time.time() + window_seconds)
+        
+        oldest_request = self.requests[session_id][0]
+        reset_time = int(oldest_request + window_seconds)
+        return reset_time
+    
+    def cleanup_old_sessions(self, max_age_hours: int = 24):
+        """Remove sessions older than max_age to prevent memory bloat"""
+        now = time.time()
+        sessions_to_remove = []
+        
+        for session_id, requests_list in self.requests.items():
+            if requests_list and (now - requests_list[-1]) > (max_age_hours * 3600):
+                sessions_to_remove.append(session_id)
+        
+        for session_id in sessions_to_remove:
+            del self.requests[session_id]
+        
+        if sessions_to_remove:
+            print(f"[Rate Limit Cleanup] Removed {len(sessions_to_remove)} old sessions")
+
+rate_limiter = RateLimiter()
+
+# Periodic cleanup (runs every time a request comes in, but only cleans if needed)
+last_cleanup = time.time()
+
+def trigger_cleanup_if_needed():
+    global last_cleanup
+    now = time.time()
+    if (now - last_cleanup) > 3600:  # Cleanup every hour
+        rate_limiter.cleanup_old_sessions()
+        last_cleanup = now
 
 #---------- INIT FASTAPI ----------
 app = FastAPI(title="AI Chatbot API with Memory", version="4.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://ai-chatbot-ten-beta-64.vercel.app/",
+        "http://localhost:3000"  # for local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -382,15 +176,12 @@ class HybridEmbeddings:
             print("🔄 Using simple fallback embeddings...")
             self.fallback_used = True
             
-        # Create a simple embedding based on character frequencies
         text = text.lower()
-        # Use first 1024 characters or pad with zeros
         chars = list(text[:self.dimension])
         embedding = np.zeros(self.dimension)
         
         for i, char in enumerate(chars):
             if i < self.dimension:
-                # Simple character encoding
                 embedding[i] = ord(char) / 1000.0
                 
         return embedding
@@ -400,7 +191,7 @@ class HybridEmbeddings:
         print(f"🔍 Getting embeddings for {len(texts)} texts...")
         embeddings = []
         for i, text in enumerate(texts):
-            if i % 10 == 0:  # Progress indicator
+            if i % 10 == 0:
                 print(f"🔍 Processed {i}/{len(texts)} embeddings...")
             emb = self.encode(text)
             embeddings.append(emb)
@@ -411,58 +202,114 @@ print("🔄 Initializing hybrid embedding model...")
 embedding_model = HybridEmbeddings()
 print("✅ Hybrid embedding model initialized successfully!")
 
-#---------- LOAD FAQ ----------
+#---------- FAQ DATA ----------
 faq_path = os.path.join(os.path.dirname(__file__), "faq.csv")
 if not os.path.exists(faq_path):
     raise FileNotFoundError(f"❌ faq.csv not found at {faq_path}")
 
-# FAQ data structure: list of dicts with question, answer, embedding
 faq_data: List[Dict] = []
 
-def load_faq_with_api():
-    """Load FAQ and generate embeddings via Jina API"""
-    global faq_data
-    faq_data = []
+def save_embeddings_to_db(data: List[Dict]):
+    """Save embeddings to MongoDB"""
+    try:
+        faq_collection.delete_many({})
+        db_data = [
+            {
+                "question": item["question"],
+                "answer": item["answer"],
+                "embedding": item["embedding"].tolist() if isinstance(item["embedding"], np.ndarray) else item["embedding"]
+            }
+            for item in data
+        ]
+        faq_collection.insert_many(db_data)
+        print(f"💾 Saved {len(db_data)} embeddings to MongoDB!")
+    except PyMongoError as e:
+        print(f"⚠️ Failed to save embeddings to MongoDB: {e}")
 
-    # Read CSV without pandas
+def load_embeddings_from_db():
+    """Load embeddings from MongoDB"""
+    try:
+        documents = list(faq_collection.find({}, {"_id": 0}))
+        if not documents:
+            print("ℹ️ No embeddings found in MongoDB")
+            return None
+        for doc in documents:
+            doc["embedding"] = np.array(doc["embedding"])
+        print(f"✅ Loaded {len(documents)} embeddings from MongoDB!")
+        return documents
+    except PyMongoError as e:
+        print(f"⚠️ Failed to load embeddings from MongoDB: {e}")
+        return None
+
+def load_faq_with_api():
+    """Load FAQ and generate embeddings via Jina API (only for new entries)"""
+    global faq_data
+
+    cached_faq = load_embeddings_from_db()
+    
     with open(faq_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
-        questions = []
-        answers = []
+        current_questions = []
+        current_data = []
         
         for row in reader:
-            questions.append(row["question"])
-            answers.append(row["answer"])
+            current_questions.append(row["question"])
+            current_data.append({
+                "question": row["question"],
+                "answer": row["answer"]
+            })
 
-    if not questions:
+    if not current_questions:
         print("⚠️ No FAQ entries found in CSV")
-        return []
+        faq_data = []
+        return
 
-    # Get embeddings in batch (more efficient)
-    print(f"🔄 Generating embeddings for {len(questions)} FAQ entries...")
-    embeddings = embedding_model.encode_batch(questions)
+    if cached_faq:
+        cached_questions = {item["question"]: item for item in cached_faq}
+        
+        new_entries = []
+        reused_entries = []
+        
+        for item in current_data:
+            if item["question"] in cached_questions:
+                reused_entries.append({
+                    **item,
+                    "embedding": cached_questions[item["question"]]["embedding"]
+                })
+            else:
+                new_entries.append(item)
+        
+        if new_entries:
+            print(f"🔄 Generating embeddings for {len(new_entries)} NEW FAQ entries...")
+            new_questions = [item["question"] for item in new_entries]
+            embeddings = embedding_model.encode_batch(new_questions)
+            
+            for item, emb in zip(new_entries, embeddings):
+                item["embedding"] = emb
+        
+        faq_data = reused_entries + new_entries
+        print(f"✅ Loaded {len(reused_entries)} FAQs from MongoDB + {len(new_entries)} new entries")
+        
+    else:
+        print(f"🔄 No embeddings in MongoDB. Generating for {len(current_questions)} FAQ entries...")
+        questions = [item["question"] for item in current_data]
+        embeddings = embedding_model.encode_batch(questions)
+        
+        faq_data = []
+        for item, emb in zip(current_data, embeddings):
+            faq_data.append({**item, "embedding": emb})
+        print(f"✅ Generated embeddings for {len(faq_data)} FAQ entries")
+    
+    save_embeddings_to_db(faq_data)
 
-    # Combine questions, answers, and embeddings
-    faq_data = []
-    for i, (q, a) in enumerate(zip(questions, answers)):
-        faq_data.append({
-            "question": q,
-            "answer": a,
-            "embedding": embeddings[i] if i < len(embeddings) else np.zeros(embedding_model.dimension)
-        })
-
-    print(f"✅ Loaded {len(faq_data)} FAQ entries with embeddings.")
-    return faq_data
-
-# Initial FAQ load
-faq_data = load_faq_with_api()
+load_faq_with_api()
 
 #---------- RELOAD FAQ HELPER ----------
 def reload_faq():
     """Reload FAQ from CSV and recompute embeddings via API."""
     global faq_data
-    faq_data = load_faq_with_api()
-    print(f"✅ Reloaded {len(faq_data)} FAQ entries with embeddings.")
+    load_faq_with_api()
+    print(f"✅ Reloaded {len(faq_data)} FAQ entries.")
 
 #---------- SESSION MEMORY ----------
 conversation_memory: Dict[str, List[Dict]] = {}
@@ -480,9 +327,20 @@ def clean_expired_sessions():
         print(f"[Memory Cleanup] Expired session removed: {sid}")
 
 #---------- EMBEDDING HELPER ----------
-def embed_text(text: str):
-    """Get embedding for text using Jina API"""
-    return embedding_model.encode(text)
+query_embedding_cache = {}
+
+def embed_text(text: str, use_cache: bool = True):
+    """Get embedding for text using Jina API with optional caching"""
+    if use_cache and text in query_embedding_cache:
+        print(f"📦 Using cached embedding for query")
+        return query_embedding_cache[text]
+    
+    embedding = embedding_model.encode(text)
+    
+    if use_cache:
+        query_embedding_cache[text] = embedding
+    
+    return embedding
 
 #---------- FIND FAQ MATCH ----------
 def find_best_match(user_query: str):
@@ -513,20 +371,20 @@ def generate_ai_response(prompt: str, memory: List[Dict], faq_context: str = Non
     system_message = {
         "role": "system",
         "content": (
-            "You are a Chatbot designed to assist users with their inquiries. "
-            "You are a warm, empathetic, and conversational support assistant. "
-            "You remember previous parts of the conversation and maintain context naturally. "
-            "Be concise but engaging, and stay consistent with prior responses."
+            "You are a helpful support assistant for a company. Your role is to answer user questions professionally and courteously. "
+             "Be friendly, knowledgeable, and empathetic in your responses. "
+             "Maintain context from previous messages in the conversation. "
+             "Keep responses concise but helpful. "
+             "If a user asks something you cannot help with, politely suggest they contact the support team at usmanaliyu001@gmail.com. "
+             "Always respond in a normal, professional manner without using titles or formal address."
         ),
     }
 
     messages = [system_message]
 
-    # Add short-term memory (last 10 messages)
     for item in memory[-MAX_MEMORY_MESSAGES:]:
         messages.append({"role": "user" if item["sender"] == "user" else "assistant", "content": item["message"]})
 
-    # Add new prompt
     if faq_context:
         messages.append({
             "role": "user",
@@ -571,7 +429,7 @@ class AddFAQRequest(BaseModel):
     question: str
     answer: str
 
-#---------- HELPER TO CHECK FOR DUPLICATES ----------
+#---------- DUPLICATE CHECK ----------
 def get_unique_faqs(new_entries: List[Dict]) -> List[Dict]:
     """Filter new entries to exclude duplicates based on exact question + answer match."""
     if not new_entries:
@@ -593,7 +451,6 @@ def add_faq(req: AddFAQRequest):
     if not req.question.strip() or not req.answer.strip():
         raise HTTPException(status_code=400, detail="Question and answer cannot be empty.")
 
-    # Check for duplicate
     new_entry = {"question": req.question, "answer": req.answer}
     unique_entries = get_unique_faqs([new_entry])
 
@@ -604,12 +461,10 @@ def add_faq(req: AddFAQRequest):
             "total_faqs": len(faq_data)
         }
 
-    # Append to CSV
     with open(faq_path, 'a', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=['question', 'answer'])
         writer.writerow(new_entry)
 
-    # Reload FAQ with new embedding
     reload_faq()
 
     return {
@@ -625,7 +480,6 @@ def upload_faq_csv(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed.")
 
     try:
-        # Read uploaded CSV
         content = file.file.read()
         decoded_content = content.decode('utf-8').splitlines()
         reader = csv.DictReader(decoded_content)
@@ -641,19 +495,16 @@ def upload_faq_csv(file: UploadFile = File(...)):
         if not new_entries:
             raise HTTPException(status_code=400, detail="CSV is empty or missing required columns.")
 
-        # Filter for unique entries only
         unique_entries = get_unique_faqs(new_entries)
 
         if not unique_entries:
             raise HTTPException(status_code=400, detail="All FAQs in CSV already exist. No new entries added.")
 
-        # Append unique new rows to existing CSV
         with open(faq_path, 'a', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=['question', 'answer'])
             for entry in unique_entries:
                 writer.writerow(entry)
 
-        # Reload FAQ with new embeddings
         reload_faq()
 
         return {
@@ -671,46 +522,75 @@ def upload_faq_csv(file: UploadFile = File(...)):
 @app.get("/get_faqs")
 @app.get("/faq")
 def get_faqs():
-    # Return questions and answers only (no embeddings)
     faqs_list = [{"question": item["question"], "answer": item["answer"]} for item in faq_data]
     return {
         "faqs": faqs_list,
         "total": len(faqs_list)
     }
 
-#---------- MAIN CHAT ROUTE ----------
+#---------- MAIN CHAT ROUTE WITH RATE LIMITING ----------
 @app.post("/chat")
 def chat(req: ChatRequest):
+    trigger_cleanup_if_needed()
+    
+    # Rate limiting check
+    is_allowed, remaining = rate_limiter.is_allowed(
+        req.session_id,
+        max_requests=20,
+        window_seconds=3600  # 20 requests per hour
+    )
+    
+    if not is_allowed:
+        reset_time = rate_limiter.get_reset_time(req.session_id, window_seconds=3600)
+        reset_datetime = datetime.fromtimestamp(reset_time).strftime("%H:%M:%S UTC")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded. Max 20 requests per hour. Resets at {reset_datetime}"
+        )
+    
     user_message = req.message.strip()
     if not user_message:
         raise HTTPException(status_code=400, detail="Empty message.")
 
     clean_expired_sessions()
 
-    # Initialize session memory if new
     if req.session_id not in conversation_memory:
         conversation_memory[req.session_id] = []
         print(f"[New Session] {req.session_id}")
 
-    # Retrieve conversation memory
     memory = conversation_memory[req.session_id]
 
-    # Try FAQ match
-    faq_answer = find_best_match(user_message)
-    ai_reply = generate_ai_response(user_message, memory, faq_context=faq_answer)
+    greetings = ["hi", "hello", "hey", "greetings", "hiya", "howdy", "what's up", "sup"]
+    is_greeting = any(user_message.lower().strip() == g for g in greetings)
+    
+    if is_greeting:
+        ai_reply = "Hello! How can I help you today?"
+        source = "greeting"
+    else:
+        faq_answer = find_best_match(user_message)
+        
+        if not faq_answer:
+            ai_reply = (
+                "That's a great question! To ensure you get the most accurate and personalized assistance, "
+                "I'd recommend reaching out to our dedicated support team at usmanaliyu001@gmail.com. "
+                "They'll be able to provide you with detailed guidance tailored to your specific needs. We appreciate your inquiry!"
+            )
+            source = "no_match"
+        else:
+            ai_reply = generate_ai_response(user_message, memory, faq_context=faq_answer)
+            source = "faq_enhanced"
 
-    # Store new messages in memory
     memory.append({"sender": "user", "message": user_message, "timestamp": datetime.utcnow()})
     memory.append({"sender": "assistant", "message": ai_reply, "timestamp": datetime.utcnow()})
 
-    # Trim memory
     if len(memory) > 2 * MAX_MEMORY_MESSAGES:
         conversation_memory[req.session_id] = memory[-2 * MAX_MEMORY_MESSAGES :]
 
     return {
         "reply": ai_reply,
-        "source": "faq_enhanced" if faq_answer else "ai_original",
+        "source": source,
         "memory_length": len(conversation_memory[req.session_id]),
+        "remaining_requests": remaining,
     }
 
 #---------- ROUTES ----------

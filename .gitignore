@@ -1,2 +1,4 @@
 Day5/.env
 *.local
+Day26/ai-chatbot/.env
+*.env
