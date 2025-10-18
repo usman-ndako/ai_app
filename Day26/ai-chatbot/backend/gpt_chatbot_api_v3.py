@@ -728,7 +728,7 @@ app = FastAPI(title="AI Chatbot API with Memory", version="4.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://ai-chatbot-ten-beta-64.vercel.app/",
+        "https://ai-chatbot-ten-beta-64.vercel.app",
         "http://localhost:3000"  # for local development
     ],
     allow_credentials=True,
