@@ -1,0 +1,27 @@
+{
+    "kpis": {
+        "total_revenue": 115431.58,
+        "average_daily_revenue": 302.97,
+        "highest_revenue_day": 836.66,
+        "lowest_revenue_day": 23.02,
+        "card_ratio": 0.97,
+        "cash_ratio": 0.03,
+        "top_products": [
+            "Latte",
+            "Americano with Milk",
+            "Cappuccino"
+        ],
+        "bottom_products": [
+            "Espresso",
+            "Cortado"
+        ]
+    },
+    "ai_analysis": {
+        "analysis_summary": "The caf\u00e9's total revenue is $115,431.58, with an average daily revenue of $302.97, indicating a relatively stable financial performance. The high card ratio of 0.97 suggests that most customers prefer cashless transactions. The top-selling products, such as Latte, Americano with Milk, and Cappuccino, drive the majority of the revenue, while Espresso and Cortado are less popular. The significant difference between the highest and lowest revenue days ($836.66 vs $23.02) may indicate opportunities to optimize staffing, marketing, or inventory management.",
+        "recommendations": [
+            "Optimize inventory and staffing on low-revenue days to minimize waste and reduce labor costs",
+            "Consider promoting or rebranding Espresso and Cortado to increase their sales and profitability",
+            "Explore loyalty programs or rewards for customers who frequently purchase top-selling products like Latte, Americano with Milk, and Cappuccino"
+        ]
+    }
+}

@@ -1,0 +1,37 @@
+**Executive Summary**
+
+Our retail café has demonstrated a steady sales performance over the past year, with a total of $115,431.58 in sales. The average daily sales revenue is $315.51.
+
+**Sales Performance and Trends**
+
+* The highest daily sales revenue was $836.66 on October 11, 2024, while the lowest was $23.02 on August 29, 2024.
+* The café experiences fluctuations in sales throughout the year, with peak sales during the months of October and November, and slower sales during the summer months.
+* The average monthly sales revenue is $9,619.32, with a standard deviation of $2,351.19.
+
+**Product Performance**
+
+* The top-selling coffee products are:
+	1. Latte ($27,866.30)
+	2. Americano with Milk ($25,269.12)
+	3. Cappuccino ($18,034.14)
+* The low-selling coffee products are:
+	1. Espresso ($2,814.28)
+	2. Cortado ($7,534.86)
+	3. Cocoa ($8,678.16)
+* Hot Chocolate and Americano are also popular products, with sales of $10,172.46 and $15,062.26, respectively.
+
+**Payment Insights**
+
+* The majority of sales (97.2%) are made using card payments, with a total of $112,245.58.
+* Cash payments account for only 2.8% of sales, with a total of $3,186.00.
+* The café may consider incentivizing cash payments or exploring alternative payment methods to increase customer convenience.
+
+**Strategic Business Recommendations**
+
+1. **Optimize Menu Offerings**: Consider revising the menu to focus on top-selling products and discontinuing or modifying low-selling items to improve profitability.
+2. **Seasonal Promotions**: Develop targeted promotions and discounts during slower sales periods to boost revenue and attract new customers.
+3. **Payment Options**: Explore alternative payment methods, such as mobile payments or loyalty programs, to enhance customer convenience and increase sales.
+4. **Customer Loyalty**: Implement a loyalty program to reward repeat customers and encourage retention, potentially leading to increased sales and positive word-of-mouth.
+5. **Marketing and Advertising**: Develop a comprehensive marketing strategy to raise awareness about the café and its products, targeting both existing and potential customers.
+
+By implementing these strategic recommendations, our retail café can improve
