@@ -3,3 +3,4 @@ uvicorn
 pandas
 scikit-surprise
 joblib
+numpy==1.26.4
